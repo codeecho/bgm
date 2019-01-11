@@ -1,0 +1,31 @@
+{
+  "name": "my-app",
+  "version": "1.0.0",
+  "description": "Describe my-app here",
+  "private": true,
+  "scripts": {
+    "build": "nwb build-react-app",
+    "clean": "nwb clean-app",
+    "start": "nwb serve-react-app",
+    "test": "nwb test-react",
+    "test:coverage": "nwb test-react --coverage",
+    "test:watch": "nwb test-react --server"
+  },
+  "dependencies": {
+    "bootstrap": "^3.3.7",
+    "bootswatch": "^3.3.7",
+    "clone": "^2.1.2",
+    "nwb-less": "^0.6.1",
+    "react": "^16.6.3",
+    "react-bootstrap": "^0.32.1",
+    "react-dom": "^16.6.3",
+    "react-toastify": "^4.5.1",
+    "shuffle-array": "^1.0.1"
+  },
+  "devDependencies": {
+    "nwb": "0.23.x"
+  },
+  "author": "",
+  "license": "MIT",
+  "repository": ""
+}
