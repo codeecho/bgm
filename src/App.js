@@ -60,7 +60,7 @@ class App extends Component {
                                 <div class="card deck">
                                     <div class="card-data-table">
                                       <h3>Game Status</h3>
-                                		<table class="table table-striped">
+                                		<table class="table table-striped condensed">
                                         <tbody>
                                           <tr>
                                             <th>Stage</th>
@@ -84,7 +84,6 @@ class App extends Component {
                                           </tr>
                                       </tbody>
                                   </table>
-                                      <button class="btn btn-info btn-lg" onClick={this.endTurn}>End Turn</button>
                                   </div>
                                 </div>
                             </div>
@@ -109,8 +108,9 @@ class App extends Component {
                                             <td>{totalRating}</td>
                                           </tr>
                                       </tbody>
-                                  </table>
-                                      <button class="btn btn-info btn-lg" onClick={this.viewSquad}>View Squad</button>
+                                    </table>
+                                    <button class="btn btn-info btn-lg" onClick={this.viewSquad}>View Squad</button>
+                                    <button class="btn btn-info btn-lg" onClick={this.endTurn}>End Turn</button>
                                   </div>
                                 </div>                                
                             </div>
@@ -202,6 +202,11 @@ class App extends Component {
                                     <td>{summary[1].bonusEnergy}</td>
                                 </tr>
                                 <tr>
+                                    <th>Season Bonus</th>
+                                    <td>{summary[0].seasonBonus}</td>
+                                    <td>{summary[1].seasonBonus}</td>
+                                </tr>
+                                <tr>
                                     <th>Dice Roll</th>
                                     <td>{summary[0].diceRoll}</td>
                                     <td>{summary[1].diceRoll}</td>
@@ -254,14 +259,14 @@ function EventCard(props){
     return (
         <div class="card event-card">
             <h3>{name}</h3>
-		    <img src="http://www.restaurantnews.com/wp-content/uploads/2017/07/Firebird-Restaurant-Group-Acquires-Village-Burger-Bar.jpg" alt="Northern Pike" class="pic" />
+		    <img src="assets/training.jpg" class="pic" />
 		    <div class="infobox">
                 {energy && <div class="card-body-icon">
-                    <img src="https://image.flaticon.com/icons/svg/607/607303.svg" />
+                    <img src="assets/energy.svg" />
                     <span>{energy > 0 ? '+' + energy : energy}</span>
                 </div>}
-                { money > 0 && <div class="card-body-icon">
-                    <img src="https://visualpharm.com/assets/688/Paper%20Money-595b40b65ba036ed117d3bfa.svg" />
+                { money && <div class="card-body-icon">
+                    <img src="assets/money.svg" />
                     <span>{money > 0 ? '+' + money : money}</span>
                 </div>}
                 <p class="effect">{description}</p>
@@ -277,11 +282,11 @@ function OperationsCard(props){
     return (
         <div class="card operations-card" onClick={buy || play}>
             <h3>{name} <span class="number-indicator">{cost}</span></h3>
-    		<img src="http://www.restaurantnews.com/wp-content/uploads/2017/07/Firebird-Restaurant-Group-Acquires-Village-Burger-Bar.jpg" alt="Northern Pike" class="pic" />
+    		<img src="assets/stadium.jpg" class="pic" />
     		<div class="infobox">
     			<p class="fact"></p>
                 { income > 0 && <div class="card-body-icon">
-                    <img src="https://visualpharm.com/assets/688/Paper%20Money-595b40b65ba036ed117d3bfa.svg" />
+                    <img src="assets/money.svg" />
                     <span>+{income}</span>
                 </div>}
                 {draw > 0 && <p class="card-draw-text">Draw {draw} card</p>}
@@ -296,20 +301,20 @@ function StrategyCard(props){
     return (
         <div class="card strategy-card" onClick={buy || play}>
             <h3>{name} <span class="number-indicator">{cost}</span></h3>
-		    <img src="http://www.restaurantnews.com/wp-content/uploads/2017/07/Firebird-Restaurant-Group-Acquires-Village-Burger-Bar.jpg" alt="Northern Pike" class="pic" />
+		    <img src="assets/tactics.jpg" class="pic" />
 		    <div class="infobox">
 			    <p class="fact"></p>
 			    <p class="effect">{description}</p>
 			    {energy && <div class="card-body-icon">
-                    <img src="https://image.flaticon.com/icons/svg/607/607303.svg" />
+                    <img src="assets/energy.svg" />
                     <span>+{energy}</span>
                 </div>}
                 {bonus && <div class="card-body-icon">
-                    <img src="https://image.flaticon.com/icons/svg/607/607303.svg" />
+                    <img src="assets/energy.svg" />
                     <span>+{bonus}</span>
                 </div>}
                 { money > 0 && <div class="card-body-icon">
-                    <img src="https://visualpharm.com/assets/688/Paper%20Money-595b40b65ba036ed117d3bfa.svg" />
+                    <img src="assets/money.svg" />
                     <span>+{money}</span>
                 </div>}
 		    </div>
@@ -319,15 +324,15 @@ function StrategyCard(props){
 
 function PlayerCard(props){
     const {card, buy, sub, selected} = props
-    const { name, cost, ability, benchAbility, tradeValue, positions, attributes, injury, suspension, bonusAbility, bonusAttributes} = card;
+    const { name, cost, ability, benchAbility, tradeValue, positions, attributes, injury, suspension, bonusAbility, bonusAttributes, description, chemistry} = card;
     return (
-        <div class={'card player-card ' + (selected ? 'selected' : '')} onClick={buy || sub}>
+        <div class={'card player-card chemistry-' + chemistry + (selected ? ' selected' : '') + (injury > 0 ? ' injured' : '') + (suspension > 0 ? ' suspended' : '')} onClick={buy || sub}>
             <h3> {name} <span class="number-indicator cost">{cost}</span></h3>
             {positions && <span class="number-indicator position">{positions.join(', ')}</span>}
-		    <img src="http://www.restaurantnews.com/wp-content/uploads/2017/07/Firebird-Restaurant-Group-Acquires-Village-Burger-Bar.jpg" alt="Northern Pike" class="pic" />
+		    <img src="assets/player.jpg" class="pic" />
 		    <div class="infobox">
                 <p class="attributes">{attributes.concat(bonusAttributes).join(', ')}&nbsp;</p>
-                <p class="effect">&nbsp;</p>
+                <p class="effect">{description}&nbsp;</p>
                 <div class="ability">
                     <span class="number-indicator ability">{ability}</span>
                     <span class="number-indicator bench-ability">{benchAbility}</span>

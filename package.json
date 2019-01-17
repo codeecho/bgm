@@ -20,7 +20,8 @@
     "react-bootstrap": "^0.32.1",
     "react-dom": "^16.6.3",
     "react-toastify": "^4.5.1",
-    "shuffle-array": "^1.0.1"
+    "shuffle-array": "^1.0.1",
+    "surge": "^0.20.1"
   },
   "devDependencies": {
     "nwb": "0.23.x"

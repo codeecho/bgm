@@ -16,12 +16,10 @@ export default class StateManager{
         
         [player1Squad, player2Squad].forEach(deck => {
             const cards = [6, 5, 5, 4, 4, 4, 3, 3, 3].map(ability => {
-                console.log(ability);
                 const card = tradeDeck.find(c => c.type === 'Player' && c.ability === ability);
                 tradeDeck.remove(card);
                 return card;
             });
-            console.log(cards);
             deck.add(cards);
             deck.add(freeAgentDeck.draw(4));
             deck.shuffle();
@@ -33,7 +31,7 @@ export default class StateManager{
             round: 0,
             stage: 'Preseason',
             tradeDeck,
-            tradeRow: tradeDeck.draw(8),
+            tradeRow: tradeDeck.draw(10),
             availableIncome: 0,
             activeSubType: undefined,
             activeSubIndex: undefined,
@@ -78,11 +76,13 @@ export default class StateManager{
     
     endTurn(){
         const player = this.getActivePlayer();
-        this.discard(player.hand);
         this.discard(player.activeHand);
-        player.hand = [];
-        this.draw(5);
         player.activeHand = [];
+        if(this.state.stage !== 'Playoffs'){
+            this.discard(player.hand);
+            player.hand = [];
+            this.draw(5);   
+        }
         this.state.availableIncome = 0;
         this.state.activeSubType = undefined;
         this.state.activeSubIndex = undefined;
@@ -95,10 +95,10 @@ export default class StateManager{
             }
             if(['Regular Season', 'Playoffs'].includes(this.state.stage) && this.state.round > 0){
                 this.state.players[0].diceRoll = Math.floor(Math.random() * 6) + 1;                
-                const p1 = this.state.players[0].totalRating + this.state.players[0].diceRoll;
+                const p1 = this.state.players[0].totalRating + this.state.players[0].seasonBonus + this.state.players[0].diceRoll;
                 this.state.players[0].finalRating = p1;
                 this.state.players[1].diceRoll = Math.floor(Math.random() * 6) + 1;
-                const p2 = this.state.players[1].totalRating + this.state.players[1].diceRoll;
+                const p2 = this.state.players[1].totalRating + this.state.players[1].seasonBonus + this.state.players[1].diceRoll;
                 this.state.players[1].finalRating = p2;
                 if(p1 >= p2){
                     this.state.players[0].points += 1;
@@ -117,7 +117,8 @@ export default class StateManager{
                     p.hand = [];
                     p.discardPile = [];
                     p.deck = new Deck({cards: p.deck.cards.filter(c => c.type === 'Strategy')});
-                    p.hand = p.deck.draw(5);
+                    p.hand = p.deck.cards;
+                    p.seasonBonus = p.points;
                     p.points = 0;
                 });
                 this.state.stage = 'Playoffs';
@@ -156,11 +157,11 @@ export default class StateManager{
         player.eventCard = card;
         switch(card.type){
             case 'Injury': {
-                const { playerType, playerIndex } = card;
+                const { playerType, playerIndex, length } = card;
                 const target = player[playerType][playerIndex];
                 if(!target || target.attributes.includes('Injury Resistent')) return;
-                else if(target.attributes.includes('Injury Prone')) target.injury = 2;                
-                else target.injury = 1;
+                else if(target.attributes.includes('Injury Prone')) target.injury = length + 1;                
+                else target.injury = length;
                 return;
             }
             case 'Suspension': {
@@ -250,7 +251,11 @@ export default class StateManager{
         const player = this.getActivePlayer();
         const card = player[activeSubType][activeSubIndex];
         if(!card) return;
-        player[activeSubType][activeSubIndex] = undefined;
+        if( activeSubType === 'reserves'){
+            player.reserves = player.reserves.filter(x => x !== card);
+        }else{
+            player[activeSubType][activeSubIndex] = undefined;   
+        }
         const { activeHand } = player;
         player.activeHand = activeHand.concat(card);
         this.state.availableIncome += card.tradeValue;
@@ -279,8 +284,17 @@ export default class StateManager{
         const sub1 = player[activeSubType][activeSubIndex];
         const sub2 = player[type][index];
         
-        player[activeSubType][activeSubIndex] = sub2;
-        player[type][index] = sub1;
+        if(!sub2 && activeSubType === 'reserves'){
+            player.reserves = player.reserves.filter(x => x !== sub1);
+        }else{
+            player[activeSubType][activeSubIndex] = sub2;            
+        }
+        
+        if(!sub1 && type === 'reserves'){
+            player.reserves = player.reserves.filter(x => x !== sub2);
+        }else{
+            player[type][index] = sub1;            
+        }
         
         this.state.activeSubType = undefined;        
         this.state.activeSubIndex = undefined;
@@ -295,14 +309,18 @@ export default class StateManager{
             const lineup = starters.concat(bench);
             const team = lineup.concat(player.reserves.filter(x => x));
             
-            team.forEach(x => {
-                x.bonusAbility = 0;
-                x.bonusAttributes = [];
-            });
+            Object.values(player.starters)
+                .concat(Object.values(player.bench))
+                .concat(player.reserves)
+                .filter(x => x)
+                .forEach(x => {
+                    x.bonusAbility = 0;
+                    x.bonusAttributes = [];
+                });
             
             Object.keys(player.starters).forEach(pos => {
                 const p = player.starters[pos];
-                if(p && p.positions && !p.positions.includes[pos.toUpperCase()]){
+                if(p && p.positions && !p.positions.includes(pos.toUpperCase())){
                     p.bonusAbility -= 2;
                 }
             });
@@ -310,7 +328,7 @@ export default class StateManager{
             Object.keys(player.bench).forEach(pos => {
                 const p = player.bench[pos];
                 if(p && p.positions && !p.positions.find(x => x.indexOf(pos.toUpperCase()) > -1)){
-                    p.bonusAbility -= 2;
+                    p.bonusAbility -= 1;
                 }
             });
             
@@ -326,10 +344,6 @@ export default class StateManager{
                     const match = starters.find(y => y.attributes.concat(y.bonusAttributes).includes(boost.requires));
                     if(match) x.bonusAbility += boost.ability;
                 });
-                x.boosters.forEach(booster => {
-                    const matches = lineup.filter(y => y.attributes.concat(y.bonusAttributes).includes(booster.attribute));
-                    matches.forEach(y => y.bonusAbility += booster.ability);
-                });
                 player.activeHand.filter(card => card.type === 'Strategy').forEach(card => {
                     switch(card.strategyType){
                         case 'TypeBonus': {
@@ -342,6 +356,14 @@ export default class StateManager{
                 });
             });
             
+            starters.forEach(x => {
+                x.boosters.forEach(booster => {
+                    const matches = lineup.filter(y => y.attributes.concat(y.bonusAttributes).includes(booster.attribute));
+                    matches.forEach(y => y.bonusAbility += booster.ability);
+                });
+                x.bonusAbility += starters.find(y => y !== x && x.chemistry && y.chemistry === x.chemistry) ? 1 : 0;
+            });
+       
             player.activeHand.filter(card => card.type === 'Strategy').forEach(card => {
                 switch(card.strategyType){
                     case 'BenchBonus': {
@@ -354,6 +376,20 @@ export default class StateManager{
                         bestStarter.bonusAbility += bestStarter.benchAbility;
                         const worstSub = bench.sort((a, b) => a.ability - b.ability)[0];
                         worstSub.bonusAbility -= worstSub.benchAbility;
+                        return;
+                    }
+                    case 'SinglePlayerTypeBonus': {
+                        let target = starters.sort((a, b) => b.ability - a.ability)
+                            .find(x => x.attributes.concat(x.bonusAttributes).includes(card.attribute));
+                        if(target) {
+                            target.bonusAbility += card.bonus;
+                            return;
+                        }
+                        target = bench.sort((a, b) => b.ability - a.ability)
+                            .find(x => x.attributes.concat(x.bonusAttributes).includes(card.attribute));
+                        if(target) {
+                            target.bonusAbility += card.bonus;
+                        }
                         return;
                     }
                 } 
@@ -392,7 +428,6 @@ export default class StateManager{
 }
 
 function createPlayer(name, squadDeck){
-    console.log(name, squadDeck);
     const cardDeck = clone(playerStarterDeck);
     cardDeck.shuffle();
     return {
@@ -425,7 +460,8 @@ function createPlayer(name, squadDeck){
         winner: false,
         bonusMoney: 0,
         bonusEnergy: 0,
-        activeHand: []
+        activeHand: [],
+        seasonBonus: 0
     };
 }
 

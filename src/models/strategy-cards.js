@@ -35,6 +35,16 @@ export class PlayerTypeBonusStrategyCard extends StrategyCard{
     
 }
 
+export class SinglePlayerTypeBonusStrategyCard extends StrategyCard{
+    
+    constructor({cost, name, description, attribute, bonus}){
+        super({name, cost, strategyType: 'SinglePlayerTypeBonus', description});
+        this.attribute = attribute;
+        this.bonus = bonus;
+    }
+    
+}
+
 export class BenchBonusStrategyCard extends StrategyCard{
     
     constructor({cost}){

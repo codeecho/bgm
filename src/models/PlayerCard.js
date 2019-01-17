@@ -2,7 +2,7 @@ import Card from './Card';
 
 export default class PlayerCard extends Card{
     
-    constructor({ name, cost, positions, ability, attributes = [], injury = 0, suspension = 0, boosts = [], boosters = [] }){
+    constructor({ name, cost, positions, ability, attributes = [], injury = 0, suspension = 0, boosts = [], boosters = [], description, chemistry }){
         super({name, cost, type: 'Player'});
         this.positions = positions;
         this.ability = ability;
@@ -13,6 +13,8 @@ export default class PlayerCard extends Card{
         this.boosters = boosters;
         this.bonusAbility = 0;
         this.bonusAttributes = [];
+        this.description = description;
+        this.chemistry = chemistry;
     }
     
     get benchAbility(){

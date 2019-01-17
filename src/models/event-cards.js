@@ -1,11 +1,29 @@
 import EventCard from './EventCard';
 
+const playerTypeLabels = {
+    starters: 'starting',
+    bench: 'bench',
+    reserves: 'reserve'
+}
+
+const playerIndexLabels = {
+    'pg': 'Point Guard',
+    'sg': 'Shooting Guard',
+    'sf': 'Small Forward',
+    'pf': 'Power Forward',
+    'c': 'Center',
+    'g': 'Guard',
+    'f': 'Forward',
+    'c': 'Center'
+}
+
 export class InjuryEventCard extends EventCard{
     
-    constructor({playerType, playerIndex}){
-        super({name: 'Injury', type: 'Injury', description: 'Your ' + playerType + ' ' + playerIndex + ' has picked up an injury and is out for 1 week.'})
+    constructor({playerType, playerIndex, length}){
+        super({name: 'Injury', type: 'Injury', description: 'Your ' + playerTypeLabels[playerType] + ' ' + playerIndexLabels[playerIndex] + ' has picked up an injury and is out for ' + length + ' week.'})
         this.playerType = playerType;
         this.playerIndex = playerIndex;
+        this.length = length;
     }
     
 }
@@ -13,7 +31,7 @@ export class InjuryEventCard extends EventCard{
 export class SuspensionEventCard extends EventCard{
     
     constructor({playerType, playerIndex}){
-        super({name: 'Suspension', type: 'Suspension', description: 'Your ' + playerType + ' ' + playerIndex + ' has been suspended for 1 week.'})
+        super({name: 'Suspension', type: 'Suspension', description: 'Your ' + playerTypeLabels[playerType] + ' ' + playerIndexLabels[playerIndex] + ' has been suspended for 1 week.'})
         this.playerType = playerType;
         this.playerIndex = playerIndex;
     }
