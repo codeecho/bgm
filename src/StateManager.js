@@ -14,6 +14,12 @@ export default class StateManager{
         const player1Squad = new Deck({});
         const player2Squad = new Deck({});
         
+        const allCards = tradeDeck.cards
+            .concat(clone(playerStarterDeck).cards)
+            .concat(clone(playerStarterDeck).cards)
+            .concat(clone(eventDeck).cards)
+            .concat(clone(freeAgentDeck).cards);
+        
         [player1Squad, player2Squad].forEach(deck => {
             const cards = [6, 5, 5, 4, 4, 4, 3, 3, 3].map(ability => {
                 const card = tradeDeck.find(c => c.type === 'Player' && c.ability === ability);
@@ -26,6 +32,7 @@ export default class StateManager{
         });
         
         this.state = {
+            allCards,
             view: 'hand',
             gameOver: false,
             round: 0,
@@ -44,6 +51,10 @@ export default class StateManager{
             showSummary: false
         };
         this.calculateSquadRatings();
+
+        console.log('Operations', tradeDeck.cards.filter(c => c.type === 'Operations').length);        
+        console.log('Strategy', tradeDeck.cards.filter(c => c.type === 'Strategy').length);
+        console.log('Player', tradeDeck.cards.filter(c => c.type === 'Player').length);                
     }
     
     viewHand(){
@@ -76,6 +87,7 @@ export default class StateManager{
     
     endTurn(){
         const player = this.getActivePlayer();
+        player.previousHand = player.activeHand.concat();
         this.discard(player.activeHand);
         player.activeHand = [];
         if(this.state.stage !== 'Playoffs'){
@@ -132,6 +144,7 @@ export default class StateManager{
             this.state.players.forEach(p => {
                 p.bonusMoney = 0;
                 p.bonusEnergy = 0;
+                p.previousHand = [];
                 Object.values(p.starters)
                     .concat(Object.values(p.bench))
                     .concat(p.reserves).filter(c => c).forEach(c => {
@@ -344,7 +357,7 @@ export default class StateManager{
                     const match = starters.find(y => y.attributes.concat(y.bonusAttributes).includes(boost.requires));
                     if(match) x.bonusAbility += boost.ability;
                 });
-                player.activeHand.filter(card => card.type === 'Strategy').forEach(card => {
+                player.activeHand.concat(player.previousHand).filter(card => card.type === 'Strategy').forEach(card => {
                     switch(card.strategyType){
                         case 'TypeBonus': {
                             if(x.attributes.concat(x.bonusAttributes).includes(card.attribute)){
@@ -364,7 +377,7 @@ export default class StateManager{
                 x.bonusAbility += starters.find(y => y !== x && x.chemistry && y.chemistry === x.chemistry) ? 1 : 0;
             });
        
-            player.activeHand.filter(card => card.type === 'Strategy').forEach(card => {
+            player.activeHand.concat(player.previousHand).filter(card => card.type === 'Strategy').forEach(card => {
                 switch(card.strategyType){
                     case 'BenchBonus': {
                         const bestSub = bench.sort((a, b) => b.ability - a.ability)[0];
@@ -461,7 +474,8 @@ function createPlayer(name, squadDeck){
         bonusMoney: 0,
         bonusEnergy: 0,
         activeHand: [],
-        seasonBonus: 0
+        seasonBonus: 0,
+        previousHand: []
     };
 }
 

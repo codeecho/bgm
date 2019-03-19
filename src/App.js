@@ -41,6 +41,18 @@ class App extends Component {
     
     render() {
         
+        if(true){
+            const { allCards } = this.state;
+
+            const cards = allCards;
+            
+            return (
+                <div class="printout">
+                    { cards.map(card => <Card card={card} />) }
+                </div>
+            );
+        }
+        
         const { view, tradeDeck, tradeRow, availableIncome, activePlayer, players, stage, round, showSummary, gameOver, summary, activeSubType, activeSubIndex } = this.state;
         
         const player = players[activePlayer];
@@ -249,7 +261,8 @@ function Card(props){
         case 'Operations': return <OperationsCard {...props} />;
         case 'Player': return <PlayerCard {...props} />;
         case 'Strategy': return <StrategyCard {...props} />;        
-        default: return null;
+        case 'Event': return <EventCard {...props} />;                
+        default: return <EventCard {...props} />;
     }
 }
 
